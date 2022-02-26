@@ -1,19 +1,27 @@
 from core import Champion
+import mysql.connector
+
+db_connection = mysql.connector.connect(
+  host="localhost",
+  user="root",
+  passwd="",
+  database="champions"
+)
+
+my_database = db_connection.cursor()
+sql_statement = "SELECT * FROM champions"
+my_database.execute(sql_statement)
+output = my_database.fetchall()
 
 
-def _parse_champ(champ_text: str) -> Champion:
-    name, rock, paper, scissors = champ_text.split(sep=',')
-    return Champion(name, float(rock), float(paper), float(scissors))
-
-
-def from_csv(filename: str) -> dict[str, Champion]:
-    champions = {}
-    with open(filename, 'r') as f:
-        for line in f.readlines():
-            champ = _parse_champ(line)
-            champions[champ.name] = champ
-    return champions
+def _parse_champ(row):
+    return Champion(row[1], float(row[2]), float(row[3]), float(row[4]))
 
 
 def load_some_champs():
-    return from_csv('some_champs.txt')
+    champions = {}
+    
+    for row in output:
+        champ = _parse_champ(row)
+        champions[champ.name] = champ
+    return champions

@@ -1,9 +1,0 @@
-Vain,50,25,25
-Dr. Yi,10,10,80
-Twist,10,25,65
-Guan,30,35,35
-Siva,60,20,20
-Katina,20,50,30
-Asir,5,5,90
-Cactus,5,90,5
-Luanne,90,5,5
