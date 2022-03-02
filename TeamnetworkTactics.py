@@ -2,8 +2,37 @@ from rich import print
 from rich.prompt import Prompt
 from rich.table import Table
 
-from champlistloader import load_some_champs
-from core import Champion, Match, Shape, Team
+from socket import socket
+
+
+# To run TnT (TeamnetworkTactics) for testing:
+# 1. wamp must be running (workbench configured to localhost for champlist schema(database))
+# 2. Run dbchampfetcher in terminal.
+# 3. Run TnT in python.
+
+
+# TODO: Client to server connection to load champlist
+# Currently running from database to TnT
+from server import Champion, Match, Shape, Team
+
+sock = socket()
+
+server_address = ("localhost", 5002)
+
+sock.connect(server_address)
+db_champions_string = sock.recv(4096).decode()
+
+sock.close()
+
+def string_to_dict(string):
+    ch_string = string.replace("'","").split(")")[:-1]
+    ch_dict = {}
+    for champion in ch_string:
+        name, rock, paper, scissors = champion.split(sep=',')
+        ch_dict[name] = name, rock, paper, scissors
+    return ch_dict
+
+champions = string_to_dict(db_champions_string)
 
 
 def print_available_champs(champions: dict[Champion]) -> None:
@@ -20,7 +49,7 @@ def print_available_champs(champions: dict[Champion]) -> None:
 
     # Populate the table
     for champion in champions.values():
-        available_champs.add_row(*champion.str_tuple)
+        available_champs.add_row(*champion)
 
     print(available_champs)
 
@@ -98,7 +127,6 @@ def main() -> None:
           'Each player choose a champion each time.'
           '\n')
 
-    champions = load_some_champs()
     print_available_champs(champions)
     print('\n')
 
