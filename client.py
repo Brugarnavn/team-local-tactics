@@ -7,16 +7,21 @@ class Client:
     def __init__(this, host, port):
         this._host = host
         this._port = port
+        this._champlist = []
 
     def connectToServer(this):
         this._server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         this._server.connect((this._host, this._port))
         print("[CONNECTED] Connected to server")
-        while True:
-            this._recieveMessage()
+
+        this._recieveMessage()
 
     def disconnectServer(this) -> None:
         this._server.close((this._host, this._port))
+
+    def _sendMessage(this, data, connection):
+        message = pickle.dumps(data)
+        connection.send(message)
 
     def _recieveMessage(this):
 
@@ -27,12 +32,18 @@ class Client:
                 continue
 
             message = pickle.loads(data)
-
+            print(message)
             if message["TODO"] == "PrintChamps":
                 print(TNT.print_available_champs(message["Champions"]))
-            elif message["TODO"] == "InputChamps":
+            if message["TODO"] == "InputChamps":
+                for _ in range(3):
 
-                print("Inputchamps")
+                    champion = TNT.input_champion(
+                        str(message["info"]["playername"]), str(message["info"]["color"]), dict(message["info"]["champions"]), list[str](message["info"]["player1"]), list[str](message["info"]["player2"]))
+                    this._champlist.append(champion)
+                print(this._champlist)
+                this._sendMessage(this._champlist, this._server)
+
             elif message["TODO"] == "MatchSummary":
                 print("matchsummary")
 

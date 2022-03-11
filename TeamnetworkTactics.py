@@ -55,7 +55,7 @@ def input_champion(prompt: str,
                    color: str,
                    champions: dict[Champion],
                    player1: list[str],
-                   player2: list[str]) -> None:
+                   player2: list[str]):
 
     # Prompt the player to choose a champion and provide the reason why
     # certain champion cannot be selected
@@ -68,8 +68,7 @@ def input_champion(prompt: str,
             case name if name in player2:
                 print(f'{name} is in the enemy team. Try again.')
             case _:
-                player1.append(name)
-                break
+                return name
 
 
 def print_match_summary(match: Match) -> None:
@@ -129,7 +128,7 @@ def main() -> None:
 
     player1 = []
     player2 = []
-    
+
     # Champion selection
     for _ in range(2):
         input_champion('Player 1', 'red', champions, player1, player2)
