@@ -8,6 +8,7 @@ Ola Opdahl
 Andreas Mærland
 
 How to run:
+   First, install mysql-connector (https://www.codespeedy.com/how-to-install-mysql-connector-in-python/)
 
    Database (Required: MySQL Worbench or similar, WAMPserver)
 1. In MySQL Workbench create a MySQL connection with root username, no password, on localhost.
