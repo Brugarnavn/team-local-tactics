@@ -1,233 +1,142 @@
+from base64 import decode
 from dataclasses import dataclass
-from enum import Enum
+from os import environ
+from pydoc import cli
 from random import random, shuffle
-from socket import socket, AF_INET, SOCK_DGRAM, SOCK_STREAM
+from socket import create_server, socket, AF_INET, SOCK_STREAM
+
+import TeamnetworkTactics as TNT
+import threading
+from core import Variables, Champion
+# Recieves champions from database (in encoded form)
+# TODO: Finish this intermediary connection,
+# Temporarily, a direct connection db to client is used.
 
 
- # Recieves champions from database (in encoded form)
- # TODO: Finish this intermediary connection, 
- # Temporarily, a direct connection db to client is used.
-"""
-def get_champion_string():
-    sockDGRAM = socket(AF_INET, SOCK_DGRAM)
+class Game:
+    def __init__(this, players):
+        this._players = players
+        this._player1Champs = []
+        this._player2Champs = []
+        this._checklist = []
+        this._inputs = {
+            "player": "",
+            "color": "",
+            "Champions": dict[Champion],
+            "player1": this._player1Champs,
+            "player2": this._player2Champs
+        }
 
-    DGRAM_server_address = ("localhost", 5001)
-    sockDGRAM.bind(DGRAM_server_address)
-    db_champions_string = sockDGRAM.recvfrom(4096)
-    sockDGRAM.close()
-    return db_champions_string
+    def sendChampions(this, connection):
 
-db_champions = get_champion_string()
-print(db_champions)
+        while True:
+            msg = connection.recv(1024).decode()
+            if msg == "GIVECHAMP":
+                pass
 
-def run_server():
-    s = socket(AF_INET, SOCK_STREAM)
-    s.bind(("localhost", 5002))
-    s.listen()
+    # Først få input fra player1 & player2 for champions
+    # TNT.input_champion()
 
-    while True:
-        conn, _ = s.accept()
-        conn.send(db_champions_string)
+    def _createPlayers(this):
+        print("Creating Player")
+        for conn in this._players:
+            conn.send("PRINTCHAMPS".encode())
+            data = conn.recv(1024).decode()
+            if data == "GIVECHAMP":
+                champion = conn.recv(1024).decode()
+                while champion != "DONECHAMPSELECTION" and champion in TNT.champions:
+                    this._checklist.append(champion)
+                    if champion not in this._checklist:
+                        continue
+                    else:
+                        conn.send("CHAMPTAKEN".encode())
 
-run_server()
-"""
-
-
-_BEATS = {
-    (1, 3),
-    (3, 2),
-    (2, 1)
-}
-
-
-class Shape(Enum):
-    """
-    Hand shapes for the Rock paper scissors game.
-
-    Support the comparisson of two shapes to infer the one that wins.
-
-    Example
-    -------
-    >>> Shape.ROCK > Shape.PAPER 
-    False
-    >>> Shape.ROCK < Shape.PAPER
-    True
-    """
-    ROCK = 1
-    PAPER = 2
-    SCISSORS = 3
-
-    def __gt__(self, other):
-        return (self.value, other.value) in _BEATS
+        this._player2.send("INPUTCHAMPS".encode())
 
 
-@dataclass
-class PairThrow:
-    """
-    Store the pair of shapes in a throw.
-    """
-    red: Shape
-    blue: Shape
+class ClientThread:
+    def __init__(this, host: str, port: int):
+        this._host = host
+        this._port = port
+        this._connections = []
+
+    def clientHandler(conn, addr):
+        with conn:
+            print(conn, addr)
+            while True:
+                data = conn.recv(1024)
+                print(data)
+
+                if not data:
+                    break
+            conn.sendall(data)
+
+    def messageToClient(client, codename):  # Uten data som skal sendes
+        if codename == "printChamps":
+
+            client.send(codename.encode())
+            print(f"[CODENAME] printChampion has been sent to {client}")
+
+        elif codename == "inputChamps":
+            client.send(codename.encode())
+            print(f"[CODENAME] inputChamps has been sent to {client}")
+
+    def messageToClient(client, codename, data):  # Med data som skal sendes
+        if codename == "printChamps":
+
+            client.send(codename.encode())
+            print(f"[CODENAME] printChampion has been sent to {client}")
+            client.send(data.encode())
+
+        elif codename == "inputChamps":
+            count = 0
+            client.send(codename.encode())
+            response = client.recv(1024)
+
+            if response == "First?":
+                count += 1
+                if count == 1:
+                    client.send("You are first!".encode())
+                else:
+                    client.send("You are not first!".encode())
+
+            print(f"[CODENAME] inputChamps has been sent to {client}")
+
+    def _threadingClients(this) -> None:
+        with socket(AF_INET, SOCK_STREAM) as s:
+            s.bind((this._host, this._port))
+            s.listen()
+
+            while True:
+                conn, addr = s.accept()
+                print(f"[CONNECTION] {addr}")
+                this._connections.append(conn)
+                threading.Thread(args=(conn, addr)).start()
+
+                if (len(this._connections) == 2):
+                    print(
+                        "[CONNECTION] Two player has connected, game can begin..")
+                    game = Game(this._connections)
+                    game._createPlayers()
 
 
-class Champion:
-    """
-    Champion for the game Rock paper scissors. Store the name and the
-    probabilities of throwing each shape.
+class Server:
+    def __init__(this):
+        this._connections = []
 
-    Parameters
-    ----------
-    name : str
-        The name of the champion.
-    rock : float
-        The probability of throwing rock. Must be between 0 and 1. 
-    paper : float
-        The probability of throwing paper. Must be between 0 and 1.
-    scissors : float
-        The probability of throwing scissors. Must be between 0 and 1.
+    def _messageToClient(conn, data) -> None:
+        socket.sendto(data.encode('utf-8'), conn)
 
-    Note
-    ----
-    Probabilities are stored after dividing by the sum of them.
-    """
-
-    def __init__(self,
-                 name: str,
-                 rock: float = 1,
-                 paper: float = 1,
-                 scissors: float = 1) -> None:
-        self._name = name
-        total = rock + paper + scissors
-        self._rock = rock / total
-        self._paper = paper / total
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    def throw(self) -> Shape:
-        """
-        Throw a hand shape at random following the stored probabilities.
-
-        Returns
-        -------
-        Shape
-
-        Example
-        -------
-        >>> Champion("John").throw()
-        Shape.ROCK
-        """
-        r = random()
-        if r < self._rock:
-            return Shape.ROCK
-        if r < self._paper+self._rock:
-            return Shape.PAPER
-        return Shape.SCISSORS
-
-    @property
-    def str_tuple(self) -> tuple[str, str, str, str]:
-        """
-        A tuple with strings describing the champion.
-
-        Returns
-        -------
-        tuple
-
-        Example
-        -------
-        >>> Champion("John").str_tuple
-        ('John','0.33','0.33','0.33')
-        """
-        return (self.name,
-                f'{self._rock:.2f}',
-                f'{self._paper:.2f}',
-                f'{(1-self._rock-self._paper):.2f}')
-
-    def __repr__(self) -> str:
-        return (f'{self._name:10}|   {self._rock:.2f}   |   '
-                f'{self._paper:.2f}   |   {(1-self._rock-self._paper):.2f}')
+    def _getMessageFromClient(conn):
+        while True:
+            data = conn.recv(1024)
+            if data:
+                msg = data.decode()
+                return msg
 
 
-def pair_throw(red_champ: Champion,
-               blue_champ: Champion,
-               max_iter: int = 100) -> PairThrow:
-    """
-    Red and blue champions throw at the same time.
-
-    Parameters
-    ----------
-    red_champ : Champion
-        Red champion.
-    blue_champ : Champion
-        Blue champion.
-    max_iter : int, default 100
-        Maximun number of interations before calling a draw.
-    """
-
-    for _ in range(max_iter):
-        red_throw = red_champ.throw()
-        blue_throw = blue_champ.throw()
-        if red_throw != blue_throw:
-            break
-    return PairThrow(red_throw, blue_throw)
-
-
-@dataclass
-class Team:
-    """
-    Team consisting in a list of champions.
-
-    Support interating over the team. Each time the iteration begins 
-    the list of champions is shuffled.
-    """
-
-    champions: list[Champion]
-
-    def __iter__(self) -> list[Champion]:
-        shuffle(self.champions)
-        return iter(self.champions)
-
-
-@dataclass
-class Match:
-    """
-    Match results between two teams.
-
-    Parameters
-    ----------
-    red_team: Team
-        The red team.
-    blue_team: Team
-        The blue team.
-    n_rounds: int, default 3
-        Number of rounds to be played.
-    """
-    red_team: Team
-    blue_team: Team
-    n_rounds: int = 3
-
-    def play(self):
-        """
-        Play a match.
-        """
-        self._red_score = 0
-        self._blue_score = 0
-        self._rounds = [{} for _ in range(self.n_rounds)]
-        for round in self._rounds:
-            for red_champ, blue_champ in zip(self.red_team, self.blue_team):
-                champ_names = red_champ.name + ', ' + blue_champ.name
-                pair = pair_throw(red_champ, blue_champ)
-                if pair.red > pair.blue:
-                    self._red_score += 1
-                elif pair.red < pair.blue:
-                    self._blue_score += 1
-                round[champ_names] = pair
-
-    @property
-    def score(self) -> tuple[int, int]:
-        return (self._red_score, self._blue_score)
-
-    @property
-    def rounds(self) -> list[dict[str, PairThrow]]:
-        return self._rounds
+if __name__ == "__main__":
+    HOST = "127.0.0.1"
+    PORT = 5002
+    mainServer = ClientThread(HOST, PORT)
+    mainServer._threadingClients()

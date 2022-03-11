@@ -1,8 +1,12 @@
 from rich import print
 from rich.prompt import Prompt
 from rich.table import Table
-
-from socket import socket
+from os import environ
+from socket import create_connection
+import socket
+import core
+from core import Champion, Match, Team, Shape
+from dbFetcher import load_some_champs
 
 
 # To run TnT (TeamnetworkTactics) for testing:
@@ -13,26 +17,19 @@ from socket import socket
 
 # TODO: Client to server connection to load champlist
 # Currently running from database to TnT
-from server import Champion, Match, Shape, Team
 
-sock = socket()
-
-server_address = ("localhost", 5002)
-
-sock.connect(server_address)
-db_champions_string = sock.recv(4096).decode()
-
-sock.close()
 
 def string_to_dict(string):
-    ch_string = string.replace("'","").split(")")[:-1]
+    ch_string = string.replace("'", "").split(")")[:-1]
     ch_dict = {}
     for champion in ch_string:
         name, rock, paper, scissors = champion.split(sep=',')
-        ch_dict[name] = name, rock, paper, scissors
+        ch_dict[name] = Champion(name, float(
+            rock), float(paper), float(scissors))
     return ch_dict
 
-champions = string_to_dict(db_champions_string)
+
+champions = string_to_dict(load_some_champs())
 
 
 def print_available_champs(champions: dict[Champion]) -> None:
@@ -49,7 +46,7 @@ def print_available_champs(champions: dict[Champion]) -> None:
 
     # Populate the table
     for champion in champions.values():
-        available_champs.add_row(*champion)
+        available_champs.add_row(*champion.str_tuple)
 
     print(available_champs)
 
