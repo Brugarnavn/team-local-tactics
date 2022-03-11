@@ -16,7 +16,7 @@ How to run:
 3. Creat schema called champions in connection.
 4. Import table (.mwb) in schema and then add table info to it from the csv file.
 
-   Python scripts (Use CLI)
+   Python scripts (Do not use VScode's python CLI, use powershell/command prompt/other CLI)
 1. Run dbFetcher.py
 2. Run server.py
 3. Run client.py (Player1)
