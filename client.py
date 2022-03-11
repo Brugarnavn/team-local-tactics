@@ -1,7 +1,6 @@
 import socket
 import TeamnetworkTactics as TNT
-from core import Variables
-import json
+import pickle
 
 
 class Client:
@@ -22,29 +21,20 @@ class Client:
     def _recieveMessage(this):
 
         while True:
-            msg = this._server.recv(1024).decode()
+            data = this._server.recv(4096)
 
-            if not msg:
+            if not data:
                 continue
-            else:
-                if msg == "PRINTCHAMPS":
-                    TNT.print_available_champs(TNT.champions)
-                    continue
-                elif msg == "INPUTCHAMPS":
-                    this._server.send("GIVECHAMP".encode)
-                    for _ in range(3):
-                        while msg != "CHAMPTAKEN":
-                            try:
-                                champion = input("Choose a champion: ")
-                                this._server.send(champion)
-                            except:
-                                continue
-                            else:
-                                print("POOPSIEDAISY")
-                                break
 
-                elif msg == "printMatchSummary":
-                    TNT.print_match_summary()
+            message = pickle.loads(data)
+
+            if message["TODO"] == "PrintChamps":
+                print(TNT.print_available_champs(message["Champions"]))
+            elif message["TODO"] == "InputChamps":
+
+                print("Inputchamps")
+            elif message["TODO"] == "MatchSummary":
+                print("matchsummary")
 
 
 if __name__ == "__main__":

@@ -129,7 +129,7 @@ def main() -> None:
 
     player1 = []
     player2 = []
-
+    
     # Champion selection
     for _ in range(2):
         input_champion('Player 1', 'red', champions, player1, player2)
