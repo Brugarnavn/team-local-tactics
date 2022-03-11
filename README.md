@@ -4,6 +4,7 @@ A game for the mandatory assignment.
 Group 35
 
 Ola Opdahl
+
 Andreas Mærland
 
 How to run:
