@@ -8,6 +8,7 @@ Ola Opdahl
 Andreas Mærland
 
 How to run:
+
     Database (Required: MySQL Worbench or similar, WAMPserver)
 1. In MySQL Workbench create a MySQL connection with root username, no password, on localhost.
 2. Run WAMPSERVER64
