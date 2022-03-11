@@ -1,0 +1,10 @@
+idchampions,champion_names,rock_chance,paper_chance,scissor_chance
+0,Vain,50,25,25
+1,"Dr. Yi",10,10,80
+2,Twist,10,25,65
+3,Guan,30,35,35
+4,Siva,60,20,20
+5,Katina,20,50,30
+6,Asir,5,5,90
+7,Cactus,5,90,5
+8,Luanne,90,5,5

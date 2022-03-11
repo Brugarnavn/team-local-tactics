@@ -2,15 +2,29 @@ from concurrent.futures import thread
 from dataclasses import dataclass
 from socket import create_server, socket, AF_INET, SOCK_STREAM, timeout
 from threading import Thread
-import TeamnetworkTactics as TNT
-from core import Match, Team
+from core import Match, Team, Champion
 import pickle
 
-# Recieves champions from database (in encoded form)
-# TODO: Finish this intermediary connection,
-# Temporarily, a direct connection db to client is used.
-
 # PICKLE https://stackoverflow.com/questions/6341823/python-sending-dictionary-through-tcp
+
+
+# Turns the stringn
+def string_to_dict(string):
+    ch_string = string.replace("'", "").split(")")[:-1]
+    ch_dict = {}
+    for champion in ch_string:
+        name, rock, paper, scissors = champion.split(sep=',')
+        ch_dict[name] = Champion(name, float(
+            rock), float(paper), float(scissors))
+    return ch_dict
+
+# Recieves champions from database
+def getChamps():
+    sock = socket()
+    sock.connect(("localhost", 6000))
+    chString = sock.recv(2048).decode()
+    sock.close()
+    return chString
 
 
 class Game:
@@ -20,8 +34,7 @@ class Game:
         this._player2 = [players[1], 2]
         this._player1Champs = []
         this._player2Champs = []
-        this._champions = TNT.champions
-        this._count = 1
+        this._champions = string_to_dict(getChamps())
 
     def messageToAll(this, data):
         for conn in this._players:
@@ -35,7 +48,7 @@ class Game:
     def startGame(this) -> None:
         data = {"TODO": "PrintChamps",
                 "Champions": this._champions}
-
+        
         this.messageToAll(data)
 
         t1 = Thread(target=this.getChampions, args=(this._player1,))
@@ -110,6 +123,7 @@ class ClientThread:
         with socket(AF_INET, SOCK_STREAM) as sock:
             sock.bind((this._host, this._port))
             sock.listen()
+            
 
             while True:
 

@@ -1,5 +1,5 @@
 import mysql.connector
-from socket import socket, AF_INET, SOCK_DGRAM
+from socket import socket
 
 
 def load_some_champs():
@@ -16,18 +16,12 @@ def load_some_champs():
     champions = str("".join(str(e)[1:] for e in db.fetchall()))
     return champions
 
-
 champlist_encoded = load_some_champs().encode()
-"""
-# Temporary socket
+
 sock = socket()
-sock.bind(("localhost", 5002))
+sock.bind(("localhost", 6000))
 sock.listen()
 
 while True:
         conn, _ = sock.accept()
         conn.send(champlist_encoded)
-"""
-# DGRAM socket to be used.
-#sock = socket(AF_INET, SOCK_DGRAM)
-#sock.sendto(champlist_encoded, ("localhost", 5001))

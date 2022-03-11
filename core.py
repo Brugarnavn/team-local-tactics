@@ -3,32 +3,6 @@ from enum import Enum
 from random import random, shuffle
 
 
-"""
-def get_champion_string():
-    sockDGRAM = socket(AF_INET, SOCK_DGRAM)
-
-    DGRAM_server_address = ("localhost", 5001)
-    sockDGRAM.bind(DGRAM_server_address)
-    db_champions_string = sockDGRAM.recvfrom(4096)
-    sockDGRAM.close()
-    return db_champions_string
-
-db_champions = get_champion_string()
-print(db_champions)
-
-def run_server():
-    s = socket(AF_INET, SOCK_STREAM)
-    s.bind(("localhost", 5002))
-    s.listen()
-
-    while True:
-        conn, _ = s.accept()
-        conn.send(db_champions_string)
-
-run_server()
-"""
-
-
 _BEATS = {
     (1, 3),
     (3, 2),
