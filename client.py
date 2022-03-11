@@ -17,7 +17,7 @@ class Client:
         this._recieveMessage()
 
     def disconnectServer(this) -> None:
-        this._server.close((this._host, this._port))
+        this._server.close()
 
     def _sendMessage(this, data, connection):
         message = pickle.dumps(data)
@@ -32,20 +32,20 @@ class Client:
                 continue
 
             message = pickle.loads(data)
-            print(message)
             if message["TODO"] == "PrintChamps":
-                print(TNT.print_available_champs(message["Champions"]))
+                TNT.print_available_champs(message["Champions"])
             if message["TODO"] == "InputChamps":
                 for _ in range(3):
 
                     champion = TNT.input_champion(
                         str(message["info"]["playername"]), str(message["info"]["color"]), dict(message["info"]["champions"]), list[str](message["info"]["player1"]), list[str](message["info"]["player2"]))
                     this._champlist.append(champion)
-                print(this._champlist)
+
                 this._sendMessage(this._champlist, this._server)
 
             elif message["TODO"] == "MatchSummary":
-                print("matchsummary")
+                TNT.print_match_summary(message["match"])
+                return
 
 
 if __name__ == "__main__":
@@ -53,3 +53,4 @@ if __name__ == "__main__":
     PORT = 5002
     TnT = Client(HOST, PORT)
     TnT.connectToServer()
+    TnT.disconnectServer()
